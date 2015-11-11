@@ -303,6 +303,7 @@ public abstract class NLPOnlineComponent<N extends NLPNode,S extends NLPState<N>
 						}
 						break;
 					default:
+                        break;
 				}
 			}
 			lastNode  = node;
