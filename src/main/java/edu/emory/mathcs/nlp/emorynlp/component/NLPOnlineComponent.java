@@ -263,7 +263,50 @@ public abstract class NLPOnlineComponent<N extends NLPNode,S extends NLPState<N>
 			
 			state.next(new StringPrediction(model.getLabel(yhat), scores[yhat]));
 		}
-	
+
+		// check consistence
+		N lastNode = null;
+		for (N node : nodes) {
+			String tag = node.getNamedEntityTag();
+			if (tag != null) {
+				switch (tag.charAt(0)) {
+					case 'B':
+					case 'U':
+					case 'O':
+						if (lastNode.getNamedEntityTag() != null) {
+							if (lastNode.getNamedEntityTag().charAt(0) == 'I') {
+                                lastNode.setNamedEntityTag("L" + lastNode.getNamedEntityTag().substring(1));
+                            }
+                            else if (lastNode.getNamedEntityTag().charAt(0) == 'B') {
+                                lastNode.setNamedEntityTag("U" + lastNode.getNamedEntityTag().substring(1));
+                            }
+                        }
+						break;
+					case 'I':
+						if (lastNode.getNamedEntityTag() != null
+								&& (lastNode.getNamedEntityTag().charAt(0) == 'B'
+                            || lastNode.getNamedEntityTag().charAt(0) == 'I')) {
+							node.setNamedEntityTag("I"+lastNode.getNamedEntityTag().substring(1));
+						}
+						else {
+							node.setNamedEntityTag("B" + tag.substring(1));
+						}
+						break;
+					case 'L':
+						if (lastNode.getNamedEntityTag() != null
+                                && (lastNode.getNamedEntityTag().charAt(0) == 'B'
+                                || lastNode.getNamedEntityTag().charAt(0) == 'I')) {
+							node.setNamedEntityTag("L"+lastNode.getNamedEntityTag().substring(1));
+						}
+						else {
+							node.setNamedEntityTag("U" + tag.substring(1));
+						}
+						break;
+					default:
+				}
+			}
+			lastNode  = node;
+		}
 		if (isEvaluate()) state.evaluate(eval);
 	}
 	
